@@ -71,6 +71,8 @@ docs/
     swapping-backends.md    # how to replace e.g. ChromaDB with Qdrant
 ```
 
+**`docs/index.md` is the entry point.** Keep it updated whenever a new module or technique page is added: add a row to the relevant table and update its status (`done` / `planned`). The pipeline diagram at the bottom should also reflect new phases as they ship.
+
 **Every technique page in `docs/techniques/` must follow this exact structure:**
 
 1. **Problem Statement** — what failure mode this solves, with a concrete example of what goes wrong without it

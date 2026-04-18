@@ -98,14 +98,15 @@ Phase 3 before Phase 2 is intentional — hybrid retrieval delivers the highest 
 
 ## Docs
 
-Full documentation lives in [`docs/`](docs/):
+Start at [`docs/index.md`](docs/index.md) — it has a guided reading order, a full table of contents, and a pipeline diagram.
 
-- [`docs/concepts/data-packet.md`](docs/concepts/data-packet.md) — the inter-module contract
-- [`docs/modules/ingestion.md`](docs/modules/ingestion.md) — ingestion module reference
-- [`docs/modules/retrieval.md`](docs/modules/retrieval.md) — retrieval module reference
-- [`docs/techniques/markdown-native-parsing.md`](docs/techniques/markdown-native-parsing.md) — markdown-native parsing
-- [`docs/techniques/hybrid-search.md`](docs/techniques/hybrid-search.md) — hybrid search + RRF
-- [`docs/techniques/cross-encoder-reranking.md`](docs/techniques/cross-encoder-reranking.md) — cross-encoder reranking
+Quick links:
+- [DataPacket contract](docs/concepts/data-packet.md)
+- [Ingestion module](docs/modules/ingestion.md)
+- [Retrieval module](docs/modules/retrieval.md)
+- [Hybrid search technique](docs/techniques/hybrid-search.md)
+- [Cross-encoder reranking](docs/techniques/cross-encoder-reranking.md)
+- [Markdown-native parsing](docs/techniques/markdown-native-parsing.md)
 
 ## Examples
 
