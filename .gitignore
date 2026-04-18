@@ -25,3 +25,5 @@ htmlcov/
 # Env files
 .env
 .env.*
+
+.claude/settings.local.json
