@@ -1,75 +1,88 @@
-## Modular RAG Framework: A Research-Backed Building Block Library
-This framework is designed to address the systemic "Seven Failure Points" of Retrieval-Augmented Generation (RAG) by moving away from linear pipelines toward a Modular, Agentic, and Evaluated Architecture.
-------------------------------
-## 🎯 The Mission
-To provide a suite of "best-of-breed" building blocks that solve the core pain points of RAG—specifically Retrieval Noise, Context Loss, and Hallucinations—without the heavy abstractions of monolithic frameworks.
-## 🧱 Core Architecture & Building Blocks## Phase 1: High-Fidelity Data Ingestion
+# atomic-rag
 
-* The Problem: Messy PDFs and tables lead to "garbage in, garbage out" (FP1).
-* The Solution: Markdown-Native Parsing.
-* Tooling: Use Microsoft MarkItDown to convert complex assets (PPT, PDF, Excel) into structured Markdown. This preserves table relationships and header hierarchies for better chunking.
+A modular Python library of research-backed RAG building blocks. Each component solves one specific failure mode of retrieval-augmented generation and can be used independently or composed into a full pipeline.
 
-## Phase 2: Pre-Retrieval & Query Intelligence
+The design goal is the opposite of LangChain: no magic, no hidden abstractions. Every module has a clear input/output contract (`DataPacket`), is independently testable, and can be swapped without touching anything else.
 
-* The Problem: Vague user queries fail to find the right "gold" documents (FP2).
-* The Solution: Semantic Routing & Expansion.
-* Implementation:
-* HyDE (Hypothetical Document Embeddings): Generate a "draft" answer to improve vector search accuracy.
-   * Multi-Query Expansion: Generate 3-5 variations of a prompt to ensure maximum coverage in the vector space.
-* Tooling: DSPy for programmatically optimizing these query transformations.
+---
 
-## Phase 3: Precision Retrieval (The Hybrid Layer)
+## Install
 
-* The Problem: Vector search alone misses specific keywords or acronyms (FP3).
-* The Solution: Hybrid Search + Cross-Encoder Reranking.
-* Implementation:
-* Combine Vector Search (Chroma/FAISS) with BM25 Keyword Search.
-   * Apply a Reranker (e.g., BGE-Reranker) to the top 50 results to strictly promote the top 5 most relevant snippets to the LLM.
-* Tooling: ChromaDB for storage and Sentence-Transformers for reranking.
+```bash
+pip install -e ".[dev]"        # development install with test dependencies
+pip install markitdown          # required for the ingestion module
+```
 
-## Phase 4: Context Engineering & Filtering
+## Quick Start
 
-* The Problem: "Lost in the Middle"—LLMs ignore info buried in long context windows (FP4, FP6).
-* The Solution: Dynamic Context Compression.
-* Implementation: Strip out sentences from retrieved chunks that have low semantic similarity to the query, reducing token noise and costs.
+```python
+from atomic_rag.ingestion import MarkItDownIngestor
 
-## Phase 5: Agentic Reasoning & Self-Correction
+# Parse a PDF/PPTX/XLSX/DOCX into chunks
+ingestor = MarkItDownIngestor()
+docs = ingestor.ingest("reports/q4-2024.pdf")
 
-* The Problem: Models hallucinate or give incomplete answers when info is missing (FP7).
-* The Solution: Corrective RAG (C-RAG).
-* Implementation:
-* An "Evaluator Agent" scores the retrieved context.
-   * If the score is low, the agent triggers a fallback (e.g., Web Search or a "Refusal" module).
-* Tooling: Agno for lightweight, fast agentic loops.
+for doc in docs:
+    print(f"[{doc.chunk_index}] {doc.content[:80]}...")
+```
 
-------------------------------
-## 📊 Evaluation & Observability (The Feedback Loop)
-You cannot fix what you cannot measure. This framework integrates evaluation as a core component.
+## Development
 
-* Metric 1: Faithfulness: Does the answer come only from the retrieved context?
-* Metric 2: Context Precision: Is the "gold" document actually in our top-ranked results?
-* Tooling: Ragas for automated scoring and Langfuse for full-trace observability.
+```bash
+pytest                          # run all tests (integration tests excluded)
+pytest -m integration           # run integration tests (requires real dependencies)
+pytest tests/test_ingestion.py  # run a single test file
+pytest tests/test_ingestion.py::TestMarkdownChunker::test_splits_on_h2_headers  # single test
+pytest --cov=atomic_rag --cov-report=term-missing  # with coverage
+```
 
-------------------------------
-## 🛠 Tech Stack Summary (The "Best-of-Breed" Layers)
+---
 
-| Layer | Recommended Library |
+## Architecture
+
+All modules communicate through a single `DataPacket` object that accumulates state as it moves through the pipeline. Modules never mutate their input — they return a copy with their output fields populated.
+
+```
+DataPacket(query="...")
+  -> [Phase 2] expanded_queries populated
+  -> [Phase 3] documents populated (retrieved + reranked, with scores)
+  -> [Phase 4] context populated (compressed string for the LLM)
+  -> [Phase 5] answer populated
+  -> [Eval]    eval_scores populated (faithfulness, context_precision)
+```
+
+Each phase also appends a `TraceEntry` to `packet.trace` for observability.
+
+### Phases
+
+| Phase | Problem solved | Key technique | Status |
+|---|---|---|---|
+| 1 — Ingestion | Messy PDFs destroy table/header structure | Markdown-native parsing via MarkItDown | **done** |
+| 3 — Retrieval | Vector search misses keywords and acronyms | Hybrid search (vector + BM25) + cross-encoder reranking | planned |
+| 4 — Context | LLMs ignore information buried mid-context | Dynamic context compression | planned |
+| 2 — Query | Vague queries miss the relevant documents | HyDE + multi-query expansion | planned |
+| 5 — Agent | Hallucinations when retrieved context is insufficient | Corrective RAG (C-RAG) with evaluator + fallback | planned |
+| Eval | No visibility into where the pipeline fails | Ragas (faithfulness, context precision) + Langfuse traces | planned |
+
+Phase 3 before Phase 2 is intentional — hybrid retrieval delivers the highest quality improvement per unit of work. Query intelligence (Phase 2) has diminishing returns until retrieval is solid.
+
+### Tech Stack
+
+| Layer | Library |
 |---|---|
 | Parsing | Microsoft MarkItDown |
+| Vector store | ChromaDB / Qdrant |
+| Reranking | BGE-Reranker / Mixedbread.ai |
 | Orchestration | DSPy / Agno |
-| Vector Store | Chroma / Qdrant |
-| Reranking | Mixedbread.ai or BGE-Reranker |
 | Evaluation | Ragas |
-| Monitoring | Langfuse |
+| Observability | Langfuse |
 
-------------------------------
-## 🚀 Why This Idea Works
-Existing solutions like LangChain are often too "opinionated" or "black-boxed." By building a library of modular building blocks, you empower developers to:
+---
 
-   1. Swap components (e.g., change a Reranker without breaking the Agent).
-   2. Debug granularly (e.g., seeing exactly why a query expansion failed).
-   3. Implement research-backed logic (like C-RAG or HyDE) with minimal boilerplate.
+## Docs
 
-Next Step: Should we define the standardized JSON interface for how these modules pass data to one another?
+Full documentation lives in [`docs/`](docs/):
 
-
+- [`docs/concepts/data-packet.md`](docs/concepts/data-packet.md) — the inter-module contract
+- [`docs/modules/ingestion.md`](docs/modules/ingestion.md) — ingestion module reference
+- [`docs/techniques/markdown-native-parsing.md`](docs/techniques/markdown-native-parsing.md) — why and how markdown-native parsing works

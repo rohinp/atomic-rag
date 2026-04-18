@@ -85,6 +85,16 @@ docs/
 - Minimal working example (runnable, no hidden setup)
 - How to swap the backend implementation
 
+## README Maintenance
+
+**Keep `README.md` updated with every change.** Specifically:
+
+- When a phase ships, change its status from `planned` to `done` in the phases table.
+- When a new module is added, add a link to its docs page in the Docs section.
+- When a new technique wiki page is written, add it to the Docs section.
+- The Quick Start example must always reflect working, currently-implemented code.
+- Never add marketing language, emojis, or "Why This Works" sections to the README.
+
 ## Build & Dev Setup
 
 ```bash
