@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "atomic-rag"
+version = "0.1.0"
+description = "A modular, research-backed RAG building block library"
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic>=2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    "pytest-mock>=3.14",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-m 'not integration'"
+markers = [
+    "integration: marks tests that hit real models or external services (run with '-m integration')",
+]
+
+[tool.coverage.run]
+source = ["atomic_rag"]
+omit = ["tests/*"]
