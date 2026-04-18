@@ -11,6 +11,8 @@ The design goal is the opposite of LangChain: no magic, no hidden abstractions. 
 ```bash
 pip install -e ".[dev]"              # development install with test dependencies
 pip install markitdown               # for PDF/PPTX/XLSX ingestion
+pip install chromadb rank-bm25       # for retrieval
+pip install sentence-transformers    # for cross-encoder reranking (optional)
 pip install ".[ollama]"              # for local models via Ollama
 pip install ".[openai]"              # for OpenAI API models
 ```
@@ -73,7 +75,7 @@ Each phase also appends a `TraceEntry` to `packet.trace` for observability.
 | Phase | Problem solved | Key technique | Status |
 |---|---|---|---|
 | 1 — Ingestion | Messy PDFs destroy table/header structure | Markdown-native parsing (MarkItDown) + AST-based code chunking | **done** |
-| 3 — Retrieval | Vector search misses keywords and acronyms | Hybrid search (vector + BM25) + cross-encoder reranking | planned |
+| 3 — Retrieval | Vector search misses keywords and acronyms | Hybrid search (vector + BM25) + RRF + cross-encoder reranking | **done** |
 | 4 — Context | LLMs ignore information buried mid-context | Dynamic context compression | planned |
 | 2 — Query | Vague queries miss the relevant documents | HyDE + multi-query expansion | planned |
 | 5 — Agent | Hallucinations when retrieved context is insufficient | Corrective RAG (C-RAG) with evaluator + fallback | planned |
@@ -100,7 +102,10 @@ Full documentation lives in [`docs/`](docs/):
 
 - [`docs/concepts/data-packet.md`](docs/concepts/data-packet.md) — the inter-module contract
 - [`docs/modules/ingestion.md`](docs/modules/ingestion.md) — ingestion module reference
-- [`docs/techniques/markdown-native-parsing.md`](docs/techniques/markdown-native-parsing.md) — why and how markdown-native parsing works
+- [`docs/modules/retrieval.md`](docs/modules/retrieval.md) — retrieval module reference
+- [`docs/techniques/markdown-native-parsing.md`](docs/techniques/markdown-native-parsing.md) — markdown-native parsing
+- [`docs/techniques/hybrid-search.md`](docs/techniques/hybrid-search.md) — hybrid search + RRF
+- [`docs/techniques/cross-encoder-reranking.md`](docs/techniques/cross-encoder-reranking.md) — cross-encoder reranking
 
 ## Examples
 
