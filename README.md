@@ -9,21 +9,36 @@ The design goal is the opposite of LangChain: no magic, no hidden abstractions. 
 ## Install
 
 ```bash
-pip install -e ".[dev]"        # development install with test dependencies
-pip install markitdown          # required for the ingestion module
+pip install -e ".[dev]"              # development install with test dependencies
+pip install markitdown               # for PDF/PPTX/XLSX ingestion
+pip install ".[ollama]"              # for local models via Ollama
+pip install ".[openai]"              # for OpenAI API models
 ```
 
 ## Quick Start
 
+**Ingest a PDF or Office document:**
+
 ```python
 from atomic_rag.ingestion import MarkItDownIngestor
 
-# Parse a PDF/PPTX/XLSX/DOCX into chunks
 ingestor = MarkItDownIngestor()
 docs = ingestor.ingest("reports/q4-2024.pdf")
 
 for doc in docs:
     print(f"[{doc.chunk_index}] {doc.content[:80]}...")
+```
+
+**Ingest a Python codebase (AST-based chunking):**
+
+```python
+from atomic_rag.ingestion import CodeIngestor
+
+ingestor = CodeIngestor()
+docs = ingestor.ingest_directory("src/")  # walks recursively, ignores __pycache__ etc.
+
+for doc in docs:
+    print(f"[{doc.chunk_index}] {doc.metadata['type']:<8} {doc.metadata.get('name', '')}  ({doc.source})")
 ```
 
 ## Development
@@ -57,7 +72,7 @@ Each phase also appends a `TraceEntry` to `packet.trace` for observability.
 
 | Phase | Problem solved | Key technique | Status |
 |---|---|---|---|
-| 1 — Ingestion | Messy PDFs destroy table/header structure | Markdown-native parsing via MarkItDown | **done** |
+| 1 — Ingestion | Messy PDFs destroy table/header structure | Markdown-native parsing (MarkItDown) + AST-based code chunking | **done** |
 | 3 — Retrieval | Vector search misses keywords and acronyms | Hybrid search (vector + BM25) + cross-encoder reranking | planned |
 | 4 — Context | LLMs ignore information buried mid-context | Dynamic context compression | planned |
 | 2 — Query | Vague queries miss the relevant documents | HyDE + multi-query expansion | planned |
@@ -86,3 +101,7 @@ Full documentation lives in [`docs/`](docs/):
 - [`docs/concepts/data-packet.md`](docs/concepts/data-packet.md) — the inter-module contract
 - [`docs/modules/ingestion.md`](docs/modules/ingestion.md) — ingestion module reference
 - [`docs/techniques/markdown-native-parsing.md`](docs/techniques/markdown-native-parsing.md) — why and how markdown-native parsing works
+
+## Examples
+
+- [`examples/code_qa/`](examples/code_qa/) — indexes a Python codebase and answers questions about it (grows as phases ship)
