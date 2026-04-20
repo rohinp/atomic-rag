@@ -40,7 +40,7 @@ Reference for each pipeline phase: input/output contract, configuration, error h
 |---|---|---|
 | [Ingestion](modules/ingestion.md) | Phase 1 — parse files into Document chunks | done |
 | [Retrieval](modules/retrieval.md) | Phase 3 — hybrid search + reranking | done |
-| Context *(coming)* | Phase 4 — compress retrieved chunks before the LLM | planned |
+| [Context](modules/context.md) | Phase 4 — compress retrieved chunks before the LLM | done |
 | Query Intelligence *(coming)* | Phase 2 — HyDE + multi-query expansion | planned |
 | Agent *(coming)* | Phase 5 — answer generation with C-RAG | planned |
 | Evaluation *(coming)* | Faithfulness + context precision scoring | planned |
@@ -58,7 +58,7 @@ Each page covers one research-backed technique: problem statement, how it works,
 | [Cross-Encoder Reranking](techniques/cross-encoder-reranking.md) | Phase 3 | First-stage retrieval buries the most relevant document at rank 8–15 |
 | HyDE *(coming)* | Phase 2 | Vague queries that don't overlap with document vocabulary |
 | Multi-Query Expansion *(coming)* | Phase 2 | Single query misses relevant documents from different angles |
-| Context Compression *(coming)* | Phase 4 | "Lost in the Middle" — LLMs ignore information buried in long contexts |
+| [Context Compression](techniques/context-compression.md) | Phase 4 | "Lost in the Middle" — LLMs ignore information buried in long contexts |
 | Corrective RAG *(coming)* | Phase 5 | Hallucinations when retrieved context is insufficient or irrelevant |
 
 ---
@@ -85,7 +85,7 @@ query ──── DataPacket(query="...") ────── HybridRetriever
                                                │
                                     DataPacket(documents=[...])  ← scored + ranked
                                                │
-                                      ContextCompressor          ← Phase 4 (planned)
+                                      ContextCompressor          ← Phase 4 (done)
                                                │
                                     DataPacket(context="...")
                                                │

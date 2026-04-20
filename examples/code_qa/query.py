@@ -18,7 +18,7 @@ To use OpenAI instead, edit config.py.
 Status — grows as phases ship:
     [done]    Phase 1: ingestion  (CodeIngestor)
     [done]    Phase 3: retrieval  (HybridRetriever, vector + BM25)
-    [planned] Phase 4: context compression
+    [done]    Phase 4: context compression (SentenceCompressor)
     [planned] Phase 2: query expansion (HyDE / multi-query)
     [planned] Phase 5: LLM answer generation with C-RAG
 """
@@ -31,6 +31,7 @@ ROOT = Path(__file__).parent.parent.parent
 
 
 def build_index():
+    from atomic_rag.context import SentenceCompressor
     from atomic_rag.ingestion import CodeIngestor
     from atomic_rag.retrieval import HybridRetriever
 
@@ -42,38 +43,39 @@ def build_index():
     docs = CodeIngestor().ingest_directory(ROOT / "atomic_rag")
     retriever = HybridRetriever(embedder=EMBEDDER)
     retriever.add_documents(docs)
+    compressor = SentenceCompressor(embedder=EMBEDDER, threshold=0.45)
 
     elapsed = time.monotonic() - t0
     print(f"{len(docs)} chunks indexed in {elapsed:.1f}s")
-    return retriever
+    return retriever, compressor
 
 
-def run_query(retriever, query: str, top_k: int = 5) -> None:
+def run_query(retriever, compressor, query: str, top_k: int = 5) -> None:
     from atomic_rag.schema import DataPacket
 
     packet = DataPacket(query=query)
-    result = retriever.retrieve(packet, top_k=top_k)
+    packet = retriever.retrieve(packet, top_k=top_k)
+    packet = compressor.compress(packet)
 
-    trace = result.trace[-1]
-    print(f"\nQuery : {query}")
-    print(f"Time  : {trace.duration_ms:.0f}ms  "
-          f"(vector={trace.details['vector_hits']}, "
-          f"bm25={trace.details['bm25_hits']}, "
-          f"fused={trace.details['fused_candidates']})")
-    print(f"\nTop {len(result.documents)} results:")
-    print("-" * 60)
-    for i, doc in enumerate(result.documents, 1):
-        meta = doc.metadata
-        label = meta.get("name", meta.get("type", "?"))
-        loc = f"L{meta['start_line']}–{meta['end_line']}" if "start_line" in meta else ""
-        file_name = Path(doc.source).relative_to(ROOT)
-        print(f"\n[{i}] {meta.get('type', '?'):8}  {label}  ({file_name} {loc})  score={doc.score:.4f}")
-        print(f"    {doc.content[:200].replace(chr(10), ' ')}")
+    r_trace = next(t for t in packet.trace if t.phase == "retrieval")
+    c_trace  = next(t for t in packet.trace if t.phase == "context")
+
+    print(f"\nQuery    : {query}")
+    print(f"Retrieval: {r_trace.duration_ms:.0f}ms  "
+          f"(vector={r_trace.details['vector_hits']}, "
+          f"bm25={r_trace.details['bm25_hits']})")
+    print(f"Compress : {c_trace.duration_ms:.0f}ms  "
+          f"({c_trace.details['sentences_before']} → "
+          f"{c_trace.details['sentences_after']} sentences, "
+          f"{c_trace.details['reduction_pct']}% removed)")
+    print(f"\n--- Context for LLM ---\n")
+    print(packet.context or "(empty — no documents above threshold)")
+    print(f"\n--- End context ---")
 
 
 def main() -> None:
     try:
-        retriever = build_index()
+        retriever, compressor = build_index()
     except ImportError as e:
         print(f"Error: {e}")
         print("\nMake sure Ollama is running and models are pulled:")
@@ -82,7 +84,7 @@ def main() -> None:
         sys.exit(1)
 
     if len(sys.argv) > 1:
-        run_query(retriever, " ".join(sys.argv[1:]))
+        run_query(retriever, compressor, " ".join(sys.argv[1:]))
     else:
         print('\nInteractive mode. Type "quit" to exit.\n')
         while True:
@@ -93,7 +95,7 @@ def main() -> None:
             if q.lower() in ("quit", "exit", "q"):
                 break
             if q:
-                run_query(retriever, q)
+                run_query(retriever, compressor, q)
 
 
 if __name__ == "__main__":
