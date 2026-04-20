@@ -77,7 +77,7 @@ Each phase also appends a `TraceEntry` to `packet.trace` for observability.
 | 1 — Ingestion | Messy PDFs destroy table/header structure | Markdown-native parsing (MarkItDown) + AST-based code chunking | **done** |
 | 3 — Retrieval | Vector search misses keywords and acronyms | Hybrid search (vector + BM25) + RRF + cross-encoder reranking | **done** |
 | 4 — Context | LLMs ignore information buried mid-context | Sentence-level cosine filtering (SentenceCompressor) | **done** |
-| 2 — Query | Vague queries miss the relevant documents | HyDE + multi-query expansion | planned |
+| 2 — Query | Vague queries miss the relevant documents | HyDE + multi-query expansion | **done** |
 | 5 — Agent | Hallucinations when retrieved context is insufficient | Corrective RAG (C-RAG) with evaluator + fallback | planned |
 | Eval | No visibility into where the pipeline fails | Ragas (faithfulness, context precision) + Langfuse traces | planned |
 
@@ -109,6 +109,9 @@ Quick links:
 - [Markdown-native parsing](docs/techniques/markdown-native-parsing.md)
 - [Context module](docs/modules/context.md)
 - [Context compression technique](docs/techniques/context-compression.md)
+- [Query module](docs/modules/query.md)
+- [HyDE technique](docs/techniques/hyde.md)
+- [Multi-query expansion technique](docs/techniques/multi-query-expansion.md)
 
 ## Examples
 

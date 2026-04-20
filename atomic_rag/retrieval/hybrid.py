@@ -9,9 +9,13 @@ Orchestrates three stages:
 The reranker is optional. Without it, the RRF-fused ranking is returned directly.
 With it, the cross-encoder re-scores the top candidates for much higher precision.
 
+Phase 2 integration: if `packet.expanded_queries` is non-empty, vector search runs
+once per expanded query.  All result lists (one per query plus one BM25 pass on the
+original query) are merged via a single RRF call, so coverage improves without any
+change to the API surface.
+
 DataPacket contract:
-  Input:  packet.query set; packet.expanded_queries may be non-empty (ignored for now,
-          Phase 2 integration will use them for multi-query retrieval)
+  Input:  packet.query set; packet.expanded_queries may be populated by Phase 2
   Output: packet.documents = top_k Documents sorted by score descending
           packet.trace     = one TraceEntry appended, phase="retrieval"
 """
@@ -70,10 +74,11 @@ class HybridRetriever(RetrieverBase):
         Run hybrid retrieval and return a new DataPacket with documents populated.
 
         Stages:
-          1. Embed query, search vector store for candidate_k results
-          2. Search BM25 for candidate_k results
-          3. Fuse with RRF → deduplicated, re-ranked candidates
-          4. If reranker is set: cross-encode fused candidates → final top_k
+          1. Determine queries: use expanded_queries if Phase 2 ran, else [query]
+          2. Embed each query, search vector store → one ranked list per query
+          3. BM25 search on the original query (keyword-based; single pass is enough)
+          4. RRF fusion across all ranked lists → deduplicated candidates
+          5. If reranker is set: cross-encode fused candidates → final top_k
              Otherwise: slice fused list to top_k directly
 
         TraceEntry details include counts at each stage for observability.
@@ -81,19 +86,27 @@ class HybridRetriever(RetrieverBase):
         t0 = time.monotonic()
 
         query = packet.query
+        # Phase 2: use expanded_queries for vector search if available
+        queries_for_vector = packet.expanded_queries if packet.expanded_queries else [query]
 
-        # Stage 1: vector search
-        query_embedding = self.embedder.embed(query)
-        vector_hits = self.vector_store.search(query_embedding, self.candidate_k)
+        # Stage 1+2: vector search per query
+        all_ranked_lists = []
+        for q in queries_for_vector:
+            embedding = self.embedder.embed(q)
+            hits = self.vector_store.search(embedding, self.candidate_k)
+            all_ranked_lists.append(hits)
 
-        # Stage 2: BM25 search
+        vector_hits_count = sum(len(rl) for rl in all_ranked_lists)
+
+        # Stage 3: BM25 on the original query (keyword signal; single pass)
         bm25_hits = self._bm25.search(query, self.candidate_k)
+        all_ranked_lists.append(bm25_hits)
 
-        # Stage 3: RRF fusion
-        fused = reciprocal_rank_fusion([vector_hits, bm25_hits])
+        # Stage 4: RRF fusion across all lists
+        fused = reciprocal_rank_fusion(all_ranked_lists)
         candidates = fused[: self.candidate_k]
 
-        # Stage 4: reranking (optional)
+        # Stage 5: reranking (optional)
         if self.reranker and candidates:
             final_docs = self.reranker.rerank(query, candidates, top_k)
         else:
@@ -104,7 +117,8 @@ class HybridRetriever(RetrieverBase):
             phase="retrieval",
             duration_ms=round(duration_ms, 2),
             details={
-                "vector_hits": len(vector_hits),
+                "queries_used": len(queries_for_vector),
+                "vector_hits": vector_hits_count,
                 "bm25_hits": len(bm25_hits),
                 "fused_candidates": len(candidates),
                 "top_k": top_k,
