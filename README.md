@@ -78,7 +78,7 @@ Each phase also appends a `TraceEntry` to `packet.trace` for observability.
 | 3 — Retrieval | Vector search misses keywords and acronyms | Hybrid search (vector + BM25) + RRF + cross-encoder reranking | **done** |
 | 4 — Context | LLMs ignore information buried mid-context | Sentence-level cosine filtering (SentenceCompressor) | **done** |
 | 2 — Query | Vague queries miss the relevant documents | HyDE + multi-query expansion | **done** |
-| 5 — Agent | Hallucinations when retrieved context is insufficient | Corrective RAG (C-RAG) with evaluator + fallback | planned |
+| 5 — Agent | Hallucinations when retrieved context is insufficient | Corrective RAG (C-RAG) with evaluator + fallback | **done** |
 | Eval | No visibility into where the pipeline fails | Ragas (faithfulness, context precision) + Langfuse traces | planned |
 
 Phase 3 before Phase 2 is intentional — hybrid retrieval delivers the highest quality improvement per unit of work. Query intelligence (Phase 2) has diminishing returns until retrieval is solid.
@@ -112,6 +112,8 @@ Quick links:
 - [Query module](docs/modules/query.md)
 - [HyDE technique](docs/techniques/hyde.md)
 - [Multi-query expansion technique](docs/techniques/multi-query-expansion.md)
+- [Agent module](docs/modules/agent.md)
+- [Corrective RAG technique](docs/techniques/corrective-rag.md)
 
 ## Examples
 

@@ -42,7 +42,7 @@ Reference for each pipeline phase: input/output contract, configuration, error h
 | [Retrieval](modules/retrieval.md) | Phase 3 — hybrid search + reranking | done |
 | [Context](modules/context.md) | Phase 4 — compress retrieved chunks before the LLM | done |
 | [Query Intelligence](modules/query.md) | Phase 2 — HyDE + multi-query expansion | done |
-| Agent *(coming)* | Phase 5 — answer generation with C-RAG | planned |
+| [Agent](modules/agent.md) | Phase 5 — answer generation with C-RAG | done |
 | Evaluation *(coming)* | Faithfulness + context precision scoring | planned |
 
 ---
@@ -59,7 +59,7 @@ Each page covers one research-backed technique: problem statement, how it works,
 | [HyDE](techniques/hyde.md) | Phase 2 | Vague queries that don't overlap with document vocabulary |
 | [Multi-Query Expansion](techniques/multi-query-expansion.md) | Phase 2 | Single query misses relevant documents from different angles |
 | [Context Compression](techniques/context-compression.md) | Phase 4 | "Lost in the Middle" — LLMs ignore information buried in long contexts |
-| Corrective RAG *(coming)* | Phase 5 | Hallucinations when retrieved context is insufficient or irrelevant |
+| [Corrective RAG](techniques/corrective-rag.md) | Phase 5 | Hallucinations when retrieved context is insufficient or irrelevant |
 
 ---
 
@@ -93,7 +93,7 @@ query ──── DataPacket(query="...") ────── HyDEExpander / Mul
                                                │
                                     DataPacket(context="...")
                                                │
-                                        AgentRunner               ← Phase 5 (planned)
+                                        AgentRunner               ← Phase 5 (done)
                                                │
                                     DataPacket(answer="...")
 ```

@@ -1,8 +1,8 @@
 """
 Step 2 — Ask questions about the atomic-rag codebase.
 
-Ingests the codebase on startup (in-memory index, rebuilt each run), then
-answers questions using query expansion + hybrid retrieval + context compression.
+Full pipeline: query expansion → hybrid retrieval → context compression →
+C-RAG evaluation → grounded LLM answer.
 
 Requires Ollama running locally with these models pulled:
     ollama pull nomic-embed-text
@@ -12,16 +12,17 @@ Run:
     python examples/code_qa/query.py "how does DataPacket work?"
     python examples/code_qa/query.py --hyde "what does the MarkdownChunker do?"
     python examples/code_qa/query.py --multi-query "how does retrieval work?"
+    python examples/code_qa/query.py --no-answer  # show context only, skip LLM answer
     python examples/code_qa/query.py  # interactive mode
 
 To use OpenAI instead, edit config.py.
 
-Status — grows as phases ship:
-    [done]    Phase 1: ingestion  (CodeIngestor)
-    [done]    Phase 2: query expansion (HyDEExpander, MultiQueryExpander)
-    [done]    Phase 3: retrieval  (HybridRetriever, vector + BM25)
-    [done]    Phase 4: context compression (SentenceCompressor)
-    [planned] Phase 5: LLM answer generation with C-RAG
+Status:
+    [done] Phase 1: ingestion  (CodeIngestor)
+    [done] Phase 2: query expansion (HyDEExpander, MultiQueryExpander)
+    [done] Phase 3: retrieval  (HybridRetriever, vector + BM25)
+    [done] Phase 4: context compression (SentenceCompressor)
+    [done] Phase 5: LLM answer generation with C-RAG (AgentRunner)
 """
 
 import argparse
@@ -33,11 +34,12 @@ ROOT = Path(__file__).parent.parent.parent
 
 
 def build_index():
+    from atomic_rag.agent import AgentRunner, LLMEvaluator, LLMGenerator
     from atomic_rag.context import SentenceCompressor
     from atomic_rag.ingestion import CodeIngestor
     from atomic_rag.retrieval import HybridRetriever
 
-    from examples.code_qa.config import EMBEDDER
+    from examples.code_qa.config import CHAT_MODEL, EMBEDDER
 
     print("Building index... ", end="", flush=True)
     t0 = time.monotonic()
@@ -46,18 +48,25 @@ def build_index():
     retriever = HybridRetriever(embedder=EMBEDDER)
     retriever.add_documents(docs)
     compressor = SentenceCompressor(embedder=EMBEDDER, threshold=0.45)
+    runner = AgentRunner(
+        evaluator=LLMEvaluator(chat_model=CHAT_MODEL),
+        generator=LLMGenerator(chat_model=CHAT_MODEL),
+        threshold=0.4,
+    )
 
     elapsed = time.monotonic() - t0
     print(f"{len(docs)} chunks indexed in {elapsed:.1f}s")
-    return retriever, compressor
+    return retriever, compressor, runner
 
 
 def run_query(
     retriever,
     compressor,
+    runner,
     query: str,
     top_k: int = 5,
     expansion: str = "none",
+    show_answer: bool = True,
 ) -> None:
     from atomic_rag.schema import DataPacket
 
@@ -98,9 +107,23 @@ def run_query(
           f"({c_trace.details['sentences_before']} → "
           f"{c_trace.details['sentences_after']} sentences, "
           f"{c_trace.details['reduction_pct']}% removed)")
-    print(f"\n--- Context for LLM ---\n")
-    print(packet.context or "(empty — no documents above threshold)")
-    print(f"\n--- End context ---")
+
+    if not show_answer:
+        print(f"\n--- Context for LLM ---\n")
+        print(packet.context or "(empty — no documents above threshold)")
+        print(f"\n--- End context ---")
+        return
+
+    # Phase 5: C-RAG answer generation
+    packet = runner.run(packet)
+    a_trace = next(t for t in packet.trace if t.phase == "agent")
+
+    print(f"Agent    : {a_trace.duration_ms:.0f}ms  "
+          f"(eval_score={a_trace.details['eval_score']:.2f}, "
+          f"fallback={a_trace.details['fallback']})")
+    print(f"\n--- Answer ---\n")
+    print(packet.answer)
+    print(f"\n--- End answer ---")
 
 
 def main() -> None:
@@ -109,6 +132,7 @@ def main() -> None:
     group = parser.add_mutually_exclusive_group()
     group.add_argument("--hyde", action="store_true", help="Use HyDE query expansion")
     group.add_argument("--multi-query", action="store_true", help="Use multi-query expansion")
+    parser.add_argument("--no-answer", action="store_true", help="Show context only, skip LLM answer")
     args = parser.parse_args()
 
     expansion = "none"
@@ -117,8 +141,10 @@ def main() -> None:
     elif args.multi_query:
         expansion = "multi_query"
 
+    show_answer = not args.no_answer
+
     try:
-        retriever, compressor = build_index()
+        retriever, compressor, runner = build_index()
     except ImportError as e:
         print(f"Error: {e}")
         print("\nMake sure Ollama is running and models are pulled:")
@@ -127,7 +153,7 @@ def main() -> None:
         sys.exit(1)
 
     if args.query:
-        run_query(retriever, compressor, " ".join(args.query), expansion=expansion)
+        run_query(retriever, compressor, runner, " ".join(args.query), expansion=expansion, show_answer=show_answer)
     else:
         print('\nInteractive mode. Type "quit" to exit.\n')
         while True:
@@ -138,7 +164,7 @@ def main() -> None:
             if q.lower() in ("quit", "exit", "q"):
                 break
             if q:
-                run_query(retriever, compressor, q, expansion=expansion)
+                run_query(retriever, compressor, runner, q, expansion=expansion, show_answer=show_answer)
 
 
 if __name__ == "__main__":
