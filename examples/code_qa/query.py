@@ -13,6 +13,7 @@ Run:
     python examples/code_qa/query.py --hyde "what does the MarkdownChunker do?"
     python examples/code_qa/query.py --multi-query "how does retrieval work?"
     python examples/code_qa/query.py --no-answer  # show context only, skip LLM answer
+    python examples/code_qa/query.py --verbose    # show retrieved docs, context, and raw LLM output
     python examples/code_qa/query.py  # interactive mode
 
 To use OpenAI instead, edit config.py.
@@ -55,7 +56,10 @@ def build_index():
     runner = AgentRunner(
         evaluator=LLMEvaluator(chat_model=CHAT_MODEL),
         generator=LLMGenerator(chat_model=CHAT_MODEL),
-        threshold=0.4,
+        # 0.2 is intentionally permissive for small local models (llama3.2:3b).
+        # Small models often return scores like "0.3" even when the context is
+        # clearly relevant. Raise this to 0.5+ when using a capable API model.
+        threshold=0.2,
     )
 
     elapsed = time.monotonic() - t0
@@ -71,6 +75,7 @@ def run_query(
     top_k: int = 5,
     expansion: str = "none",
     show_answer: bool = True,
+    verbose: bool = False,
 ) -> None:
     from atomic_rag.schema import DataPacket
 
@@ -93,6 +98,11 @@ def run_query(
         n_expanded = q_trace.details["expanded_count"]
         print(f"Expansion: {strategy}  ({n_expanded} queries, {q_trace.duration_ms:.0f}ms)")
 
+        if verbose and packet.expanded_queries:
+            print("  Expanded queries:")
+            for i, eq in enumerate(packet.expanded_queries):
+                print(f"    [{i}] {eq[:120]}")
+
     # Phase 3: retrieval
     packet = retriever.retrieve(packet, top_k=top_k)
 
@@ -112,10 +122,22 @@ def run_query(
           f"{c_trace.details['sentences_after']} sentences, "
           f"{c_trace.details['reduction_pct']}% removed)")
 
+    if verbose:
+        print("\n--- Retrieved documents ---")
+        for doc in packet.documents:
+            source = doc.source.split("/atomic_rag/")[-1] if "/atomic_rag/" in doc.source else doc.source
+            print(f"  [{doc.score:.3f}] {source}  chunk={doc.chunk_index}")
+            print(f"          {doc.content[:100].replace(chr(10), ' ')}...")
+        print()
+        print("--- Compressed context ---")
+        print(packet.context or "(empty)")
+        print("--- End context ---\n")
+
     if not show_answer:
-        print(f"\n--- Context for LLM ---\n")
-        print(packet.context or "(empty — no documents above threshold)")
-        print(f"\n--- End context ---")
+        if not verbose:
+            print(f"\n--- Context for LLM ---\n")
+            print(packet.context or "(empty — no documents above threshold)")
+            print(f"\n--- End context ---")
         return
 
     # Phase 5: C-RAG answer generation
@@ -124,7 +146,12 @@ def run_query(
 
     print(f"Agent    : {a_trace.duration_ms:.0f}ms  "
           f"(eval_score={a_trace.details['eval_score']:.2f}, "
+          f"threshold={a_trace.details['threshold']}, "
           f"fallback={a_trace.details['fallback']})")
+
+    if verbose and "eval_raw" in a_trace.details:
+        print(f"  Evaluator raw response: {a_trace.details['eval_raw']!r}")
+
     print(f"\n--- Answer ---\n")
     print(packet.answer)
     print(f"\n--- End answer ---")
@@ -137,6 +164,8 @@ def main() -> None:
     group.add_argument("--hyde", action="store_true", help="Use HyDE query expansion")
     group.add_argument("--multi-query", action="store_true", help="Use multi-query expansion")
     parser.add_argument("--no-answer", action="store_true", help="Show context only, skip LLM answer")
+    parser.add_argument("--verbose", "-v", action="store_true",
+                        help="Show retrieved docs, compressed context, and raw LLM evaluator response")
     args = parser.parse_args()
 
     expansion = "none"
@@ -146,6 +175,7 @@ def main() -> None:
         expansion = "multi_query"
 
     show_answer = not args.no_answer
+    verbose = args.verbose
 
     try:
         retriever, compressor, runner = build_index()
@@ -157,7 +187,8 @@ def main() -> None:
         sys.exit(1)
 
     if args.query:
-        run_query(retriever, compressor, runner, " ".join(args.query), expansion=expansion, show_answer=show_answer)
+        run_query(retriever, compressor, runner, " ".join(args.query),
+                  expansion=expansion, show_answer=show_answer, verbose=verbose)
     else:
         print('\nInteractive mode. Type "quit" to exit.\n')
         while True:
@@ -168,7 +199,8 @@ def main() -> None:
             if q.lower() in ("quit", "exit", "q"):
                 break
             if q:
-                run_query(retriever, compressor, runner, q, expansion=expansion, show_answer=show_answer)
+                run_query(retriever, compressor, runner, q,
+                          expansion=expansion, show_answer=show_answer, verbose=verbose)
 
 
 if __name__ == "__main__":

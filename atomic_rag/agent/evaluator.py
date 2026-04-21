@@ -81,9 +81,11 @@ class LLMEvaluator(EvaluatorBase):
 
     def evaluate(self, query: str, context: str) -> float:
         if not context.strip():
+            self.last_raw_response = ""
             return 0.0
 
         prompt = self._template.format(query=query, context=context)
         raw = self._chat.complete(prompt)
+        self.last_raw_response = raw.strip()
         score = _parse_score(raw)
         return score if score is not None else self._default

@@ -88,15 +88,21 @@ class AgentRunner:
             used_fallback = True
 
         duration_ms = (time.monotonic() - t0) * 1000
+        details: dict = {
+            "eval_score": round(eval_score, 4),
+            "threshold": self.threshold,
+            "fallback": used_fallback,
+            "answer_length": len(answer),
+        }
+        # Capture raw evaluator response when available — useful for debugging
+        # why the score landed where it did (small models sometimes ignore format).
+        if hasattr(self.evaluator, "last_raw_response"):
+            details["eval_raw"] = self.evaluator.last_raw_response
+
         trace_entry = TraceEntry(
             phase="agent",
             duration_ms=round(duration_ms, 2),
-            details={
-                "eval_score": round(eval_score, 4),
-                "threshold": self.threshold,
-                "fallback": used_fallback,
-                "answer_length": len(answer),
-            },
+            details=details,
         )
 
         return packet.model_copy(update={"answer": answer}).with_trace(trace_entry)
