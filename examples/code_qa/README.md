@@ -15,7 +15,10 @@ Full pipeline implemented:
 **Option A — Ollama (local, no API key)**
 
 ```bash
-# Install Ollama: https://ollama.com
+# 1. Install dependencies (from the repo root)
+pip install -e ".[all,dev]"
+
+# 2. Install Ollama: https://ollama.com, then pull models
 ollama pull nomic-embed-text    # embedding model
 ollama pull llama3.2:3b         # chat model
 ```
@@ -23,7 +26,7 @@ ollama pull llama3.2:3b         # chat model
 **Option B — OpenAI**
 
 ```bash
-pip install openai
+pip install -e ".[dev,retrieval,reranker,markitdown,openai]"
 export OPENAI_API_KEY=sk-...
 ```
 

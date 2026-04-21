@@ -8,14 +8,36 @@ The design goal is the opposite of LangChain: no magic, no hidden abstractions. 
 
 ## Install
 
+**Quickstart — full local stack with Ollama:**
+
 ```bash
-pip install -e ".[dev]"              # development install with test dependencies
-pip install ".[markitdown]"          # for PDF/PPTX/XLSX ingestion
-pip install ".[retrieval]"           # for hybrid search (ChromaDB + BM25)
-pip install ".[reranker]"            # for cross-encoder reranking (optional)
-pip install ".[ollama]"              # for local models via Ollama
-pip install ".[openai]"              # for OpenAI API models
-pip install ".[ragas]"               # for Ragas evaluation metrics
+pip install -e ".[all,dev]"
+```
+
+This installs every dependency needed to run the pipeline end-to-end (Ollama, ChromaDB, BM25, sentence-transformers, MarkItDown) plus the test suite. Then pull the required models:
+
+```bash
+ollama pull nomic-embed-text   # embeddings
+ollama pull llama3.2:3b        # chat / reasoning
+```
+
+**Alternative — requirements.txt:**
+
+```bash
+pip install -r requirements.txt
+pip install -e .
+```
+
+**Pick only what you need:**
+
+```bash
+pip install -e ".[dev]"          # tests only — no runtime deps
+pip install -e ".[retrieval]"    # ChromaDB + BM25
+pip install -e ".[reranker]"     # cross-encoder reranking (optional)
+pip install -e ".[ollama]"       # local models via Ollama
+pip install -e ".[openai]"       # OpenAI API models
+pip install -e ".[markitdown]"   # PDF/PPTX/XLSX ingestion
+pip install -e ".[ragas]"        # Ragas evaluation metrics
 ```
 
 ## Quick Start
