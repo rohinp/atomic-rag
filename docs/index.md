@@ -69,7 +69,7 @@ Task-oriented walkthroughs.
 
 | Page | What it covers |
 |---|---|
-| [Swapping backends](guides/swapping-backends.md) *(coming)* | Replace ChromaDB with Qdrant, MarkItDown with Docling, Ollama with OpenAI |
+| [Swapping backends](guides/swapping-backends.md) | Replace ChromaDB with Qdrant, MarkItDown with Docling, Ollama with OpenAI |
 
 ---
 

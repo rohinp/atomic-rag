@@ -106,16 +106,18 @@ pytest                     # run all tests
 
 ## Status
 
-This project is in the **design/planning phase**. No implementation code exists yet. The immediate next step is defining the standardized JSON interface for inter-module data passing before any phase is implemented.
+All core phases are implemented and tested (364 tests, 0 failing).
 
-**Build order** (highest ROI first):
-1. Define inter-module data contract (`DataPacket` schema)
-2. Phase 1: Ingestion/parsing
-3. Phase 3: Hybrid retrieval + reranking
-4. Phase 4: Context compression
-5. Phase 2: Query intelligence (HyDE, multi-query)
-6. Phase 5: Agentic C-RAG loop
-7. Evaluation layer woven into each phase as it ships
+| Phase | Module | Status |
+|---|---|---|
+| Schema (DataPacket) | `atomic_rag/schema.py` | done |
+| Phase 1 — Ingestion | `atomic_rag/ingestion/` | done |
+| Phase 2 — Query intelligence | `atomic_rag/query/` | done |
+| Phase 3 — Retrieval | `atomic_rag/retrieval/` | done |
+| Phase 4 — Context compression | `atomic_rag/context/` | done |
+| Phase 5 — C-RAG agent | `atomic_rag/agent/` | done |
+| Evaluation | `atomic_rag/evaluation/` | done |
+| Model providers | `atomic_rag/models/` | done (Ollama, OpenAI) |
 
 ## Tech Stack (Planned)
 

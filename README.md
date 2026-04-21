@@ -116,6 +116,7 @@ Quick links:
 - [Agent module](docs/modules/agent.md)
 - [Corrective RAG technique](docs/techniques/corrective-rag.md)
 - [Evaluation module](docs/modules/evaluation.md)
+- [Swapping backends guide](docs/guides/swapping-backends.md)
 
 ## Examples
 
