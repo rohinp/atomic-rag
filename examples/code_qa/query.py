@@ -31,6 +31,10 @@ import time
 from pathlib import Path
 
 ROOT = Path(__file__).parent.parent.parent
+# Make the repo root importable so `from examples.code_qa.config import ...` works
+# regardless of whether the script is invoked directly or as a module.
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 
 def build_index():
