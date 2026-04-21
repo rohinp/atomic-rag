@@ -69,17 +69,22 @@ class EvalScores(BaseModel):
     """
     Evaluation metrics populated by the evaluation layer.
 
-    faithfulness: [0, 1] — does the answer derive only from the retrieved context?
-                  Measures hallucination. 1.0 = fully grounded, 0.0 = fully hallucinated.
+    faithfulness:      [0, 1] — does the answer derive only from the retrieved context?
+                       Measures hallucination. 1.0 = fully grounded, 0.0 = fully hallucinated.
+
+    answer_relevance:  [0, 1] — is the answer relevant to the question?
+                       Measures response quality. 1.0 = directly addresses the question.
 
     context_precision: [0, 1] — is the gold (relevant) document ranked highly?
                        Measures retrieval quality. 1.0 = gold doc is rank 1.
+                       Requires a ground-truth reference to compute.
 
-    Both are Optional because they require a ground-truth answer or labeled dataset
-    and will be None during normal inference (non-evaluation) runs.
+    All fields are Optional: they are None during normal inference runs and are
+    only populated when the evaluation layer is explicitly invoked.
     """
 
     faithfulness: Optional[float] = None
+    answer_relevance: Optional[float] = None
     context_precision: Optional[float] = None
 
 

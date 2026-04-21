@@ -10,11 +10,12 @@ The design goal is the opposite of LangChain: no magic, no hidden abstractions. 
 
 ```bash
 pip install -e ".[dev]"              # development install with test dependencies
-pip install markitdown               # for PDF/PPTX/XLSX ingestion
-pip install chromadb rank-bm25       # for retrieval
-pip install sentence-transformers    # for cross-encoder reranking (optional)
+pip install ".[markitdown]"          # for PDF/PPTX/XLSX ingestion
+pip install ".[retrieval]"           # for hybrid search (ChromaDB + BM25)
+pip install ".[reranker]"            # for cross-encoder reranking (optional)
 pip install ".[ollama]"              # for local models via Ollama
 pip install ".[openai]"              # for OpenAI API models
+pip install ".[ragas]"               # for Ragas evaluation metrics
 ```
 
 ## Quick Start
@@ -79,7 +80,7 @@ Each phase also appends a `TraceEntry` to `packet.trace` for observability.
 | 4 — Context | LLMs ignore information buried mid-context | Sentence-level cosine filtering (SentenceCompressor) | **done** |
 | 2 — Query | Vague queries miss the relevant documents | HyDE + multi-query expansion | **done** |
 | 5 — Agent | Hallucinations when retrieved context is insufficient | Corrective RAG (C-RAG) with evaluator + fallback | **done** |
-| Eval | No visibility into where the pipeline fails | Ragas (faithfulness, context precision) + Langfuse traces | planned |
+| Eval | No visibility into where the pipeline fails | Faithfulness + answer relevance + Ragas integration | **done** |
 
 Phase 3 before Phase 2 is intentional — hybrid retrieval delivers the highest quality improvement per unit of work. Query intelligence (Phase 2) has diminishing returns until retrieval is solid.
 
@@ -114,6 +115,7 @@ Quick links:
 - [Multi-query expansion technique](docs/techniques/multi-query-expansion.md)
 - [Agent module](docs/modules/agent.md)
 - [Corrective RAG technique](docs/techniques/corrective-rag.md)
+- [Evaluation module](docs/modules/evaluation.md)
 
 ## Examples
 

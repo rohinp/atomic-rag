@@ -43,7 +43,7 @@ Reference for each pipeline phase: input/output contract, configuration, error h
 | [Context](modules/context.md) | Phase 4 — compress retrieved chunks before the LLM | done |
 | [Query Intelligence](modules/query.md) | Phase 2 — HyDE + multi-query expansion | done |
 | [Agent](modules/agent.md) | Phase 5 — answer generation with C-RAG | done |
-| Evaluation *(coming)* | Faithfulness + context precision scoring | planned |
+| [Evaluation](modules/evaluation.md) | Faithfulness, answer relevance, Ragas integration | done |
 
 ---
 

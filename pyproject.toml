@@ -15,6 +15,9 @@ dependencies = [
 ollama = ["ollama>=0.4.0"]
 openai = ["openai>=1.0"]
 markitdown = ["markitdown>=0.1.0"]
+retrieval = ["chromadb>=0.5", "rank-bm25>=0.2"]
+reranker = ["sentence-transformers>=3.0"]
+ragas = ["ragas>=0.2", "datasets>=2.0"]
 dev = [
     "pytest>=8.0",
     "pytest-cov>=5.0",
