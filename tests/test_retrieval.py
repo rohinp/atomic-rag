@@ -282,6 +282,47 @@ class TestBM25Retriever:
         r.search("query", top_k=1)
         assert docs[0].score == 0.0
 
+    def test_camelcase_identifier_matches_query(self):
+        """BM25 must find 'DataPacket' when query contains 'datapacket'.
+
+        With whitespace-only splitting 'DataPacket(BaseModel):' becomes one
+        unmatched token. Alphanumeric tokenisation extracts 'datapacket'
+        as a separate token, making it matchable.
+
+        Note: BM25Okapi IDF formula is log(N-n+0.5) - log(n+0.5). With only
+        2 documents and a term present in exactly 1, IDF = log(1.5)-log(1.5) = 0,
+        which makes all scores 0. A corpus of 3+ documents is required for
+        non-zero IDF when a term appears in exactly one document.
+        """
+        from rank_bm25 import BM25Okapi  # real library required
+
+        relevant = make_doc("class DataPacket(BaseModel):\n    '''The inter-module contract.'''")
+        noise1 = make_doc("def ingest(self, path): pass")
+        noise2 = make_doc("class HybridRetriever combines vector and keyword search")
+
+        r = BM25Retriever()
+        r.add([relevant, noise1, noise2])
+        results = r.search("how does DataPacket work?", top_k=5)
+
+        assert len(results) >= 1
+        assert results[0].content == relevant.content
+
+    def test_punctuation_in_query_ignored(self):
+        """Punctuation in the query should not prevent matching.
+
+        Note: BM25Okapi needs N >= 3 with term in 1 doc for non-zero IDF.
+        """
+        from rank_bm25 import BM25Okapi  # real library required
+
+        doc = make_doc("retrieval augmented generation pipeline")
+        noise1 = make_doc("class DataPacket inter module contract")
+        noise2 = make_doc("def ingest path source file")
+        r = BM25Retriever()
+        r.add([doc, noise1, noise2])
+        results = r.search("retrieval-augmented generation?", top_k=5)
+        assert len(results) >= 1
+        assert results[0].content == doc.content
+
 
 # ── CrossEncoderReranker ──────────────────────────────────────────────────────
 

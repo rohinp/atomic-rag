@@ -7,11 +7,22 @@ version numbers, and error codes that embeddings tend to blur together.
 Uses rank_bm25's BM25Okapi implementation, which applies IDF weighting and
 document-length normalisation. The rank_bm25 import is lazy so the module can
 be imported without the package installed (fails only when add() is called).
+
+Tokenisation strategy
+---------------------
+Splitting on whitespace alone breaks code retrieval: "DataPacket(BaseModel):"
+becomes one token, so a query containing "datapacket" never matches it. Instead
+we extract every contiguous alphanumeric run (re.findall r"[a-zA-Z0-9]+") and
+lowercase the result. This correctly gives ["datapacket", "basemodel"] from the
+class definition line and ["datapacket"] from the query, producing a match.
 """
 
+import re
 from typing import Any
 
 from atomic_rag.schema import Document
+
+_TOKEN_RE = re.compile(r"[a-zA-Z0-9]+")
 
 
 class BM25Retriever:
@@ -47,7 +58,7 @@ class BM25Retriever:
                 "Install with: pip install rank-bm25"
             ) from e
         self._docs = list(docs)
-        tokenised = [d.content.lower().split() for d in docs]
+        tokenised = [_TOKEN_RE.findall(d.content.lower()) for d in docs]
         self._bm25 = BM25Okapi(tokenised)
 
     def search(self, query: str, top_k: int) -> list[Document]:
@@ -68,7 +79,7 @@ class BM25Retriever:
         if self._bm25 is None or not self._docs:
             return []
 
-        tokens = query.lower().split()
+        tokens = _TOKEN_RE.findall(query.lower())
         raw_scores: list[float] = self._bm25.get_scores(tokens).tolist()
 
         ranked = sorted(

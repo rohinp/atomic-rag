@@ -188,7 +188,7 @@ def main() -> None:
 
     if args.query:
         run_query(retriever, compressor, runner, " ".join(args.query),
-                  expansion=expansion, show_answer=show_answer, verbose=verbose)
+                  top_k=8, expansion=expansion, show_answer=show_answer, verbose=verbose)
     else:
         print('\nInteractive mode. Type "quit" to exit.\n')
         while True:
@@ -200,7 +200,7 @@ def main() -> None:
                 break
             if q:
                 run_query(retriever, compressor, runner, q,
-                          expansion=expansion, show_answer=show_answer, verbose=verbose)
+                          top_k=8, expansion=expansion, show_answer=show_answer, verbose=verbose)
 
 
 if __name__ == "__main__":
