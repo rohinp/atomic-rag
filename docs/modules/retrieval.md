@@ -21,7 +21,7 @@ See:
 
 ## DataPacket Contract
 
-**Input**: `DataPacket` with `query` set.
+**Input**: `DataPacket` with `query` set. If `expanded_queries` is populated (Phase 2 ran), vector search runs once per expanded query and all result lists are fused via RRF before the BM25 pass.
 
 **Output**: New `DataPacket` with:
 - `documents` — top_k `Document` objects sorted by `score` descending
@@ -114,7 +114,8 @@ Every `retrieve()` call appends a `TraceEntry` with:
     "phase": "retrieval",
     "duration_ms": 142.3,
     "details": {
-        "vector_hits": 48,      # docs returned by vector search
+        "queries_used": 3,      # 1 = no expansion; N = expanded_queries count
+        "vector_hits": 144,     # total docs across all vector searches
         "bm25_hits": 23,        # docs returned by BM25 (fewer if query terms are rare)
         "fused_candidates": 51, # unique docs after RRF
         "top_k": 5,

@@ -94,7 +94,8 @@ This makes it safe to fork a packet (e.g. run two retrieval strategies and compa
 | Field | Type | Default | Description |
 |---|---|---|---|
 | `faithfulness` | `float \| None` | `None` | [0,1] — is the answer grounded in context? |
-| `context_precision` | `float \| None` | `None` | [0,1] — is the gold doc ranked highly? |
+| `answer_relevance` | `float \| None` | `None` | [0,1] — does the answer address the question? |
+| `context_precision` | `float \| None` | `None` | [0,1] — is the gold doc ranked highly? Requires reference. |
 
 ### `DataPacket`
 

@@ -57,7 +57,7 @@ def main(target: Path) -> None:
         print(f"  ... and {len(docs) - 8} more chunks")
 
     print()
-    print("Next: Phase 3 (hybrid retrieval) will make these chunks searchable.")
+    print("Next: run query.py to search these chunks with hybrid retrieval + C-RAG.")
 
 
 if __name__ == "__main__":

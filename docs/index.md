@@ -81,21 +81,25 @@ files
                                                │
                                         (load into vector store + BM25)
                                                │
-query ──── DataPacket(query="...") ────── HyDEExpander / MultiQueryExpander  ← Phase 2 (done)
+query ──── DataPacket(query="...") ────── HyDEExpander / MultiQueryExpander  ← Phase 2
                                                │
                                     DataPacket(expanded_queries=[...])
                                                │
-                                         HybridRetriever          ← Phase 3 (done)
+                                         HybridRetriever                      ← Phase 3
                                                │
                                     DataPacket(documents=[...])  ← scored + ranked
                                                │
-                                      ContextCompressor           ← Phase 4 (done)
+                                      ContextCompressor                       ← Phase 4
                                                │
                                     DataPacket(context="...")
                                                │
-                                        AgentRunner               ← Phase 5 (done)
+                                        AgentRunner                           ← Phase 5
                                                │
                                     DataPacket(answer="...")
+                                               │
+                              LLMFaithfulnessScorer / EmbeddingAnswerRelevance ← Eval
+                                               │
+                                    DataPacket(eval_scores={...})
 ```
 
 Every phase appends a `TraceEntry` to `packet.trace` for observability.

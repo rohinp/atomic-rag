@@ -1,10 +1,14 @@
 # Example: Code Q&A
 
 Uses atomic-rag to index a Python codebase and answer questions about it.
-Currently dogfoods against the atomic-rag source itself.
+Dogfoods against the atomic-rag source itself by default.
 
-This example evolves as library phases ship — each step below becomes
-functional when the corresponding phase is implemented.
+Full pipeline implemented:
+- **Phase 1** — AST-based chunking of Python files (`CodeIngestor`)
+- **Phase 2** — Query expansion via HyDE or multi-query (`--hyde`, `--multi-query`)
+- **Phase 3** — Hybrid retrieval: vector search + BM25 + RRF + optional reranking
+- **Phase 4** — Context compression: sentence-level cosine filtering
+- **Phase 5** — C-RAG answer generation with context quality gate
 
 ## Setup
 
@@ -13,8 +17,7 @@ functional when the corresponding phase is implemented.
 ```bash
 # Install Ollama: https://ollama.com
 ollama pull nomic-embed-text    # embedding model
-ollama pull llama3.2:3b         # chat model (fast, good for dev)
-# ollama pull llama3.1:8b       # better quality, use for production
+ollama pull llama3.2:3b         # chat model
 ```
 
 **Option B — OpenAI**
@@ -24,35 +27,53 @@ pip install openai
 export OPENAI_API_KEY=sk-...
 ```
 
-Then edit `config.py` to switch the provider (instructions in the file).
+Then edit `config.py` to uncomment the OpenAI block.
 
-## Steps
+## Running
 
-### Step 1 — Ingest (works now)
+### Step 1 — Inspect the index
 
 ```bash
-# Index the atomic-rag codebase
+# Preview chunks from the atomic-rag source
 python examples/code_qa/ingest.py
 
-# Index a different repo
+# Preview chunks from a different repo
 python examples/code_qa/ingest.py path/to/your/project
 ```
 
-### Step 2 — Query (Phase 3 required)
+### Step 2 — Ask questions
 
 ```bash
+# Basic: retrieve + compress + answer
+python examples/code_qa/query.py "how does DataPacket work?"
+
+# With HyDE query expansion (better for short/vague questions)
+python examples/code_qa/query.py --hyde "what does the chunker do?"
+
+# With multi-query expansion (better for vocabulary variance)
+python examples/code_qa/query.py --multi-query "how does retrieval work?"
+
+# Show only the compressed context — skip LLM answer
+python examples/code_qa/query.py --no-answer "what is SentenceCompressor?"
+
+# Interactive mode
 python examples/code_qa/query.py
 ```
 
-## What each step will do
+Each run rebuilds the index in-memory (fast for a codebase this size). The output shows timing and stats for each phase:
 
-| Step | Requires | What it does |
-|---|---|---|
-| `ingest.py` | nothing | AST-chunks Python files, shows chunk preview |
-| `query.py` (v2) | Phase 3 | Embeds query, searches vector store + BM25, reranks |
-| `query.py` (v3) | Phase 4 | Compresses retrieved chunks before LLM call |
-| `query.py` (v4) | Phase 2 | Expands query with HyDE before retrieval |
-| `query.py` (v5) | Phase 5 | LLM answers with C-RAG self-correction |
+```
+Building index... 147 chunks indexed in 3.2s
+
+Query    : how does DataPacket work?
+Retrieval: 84ms  (queries=1, vector=50, bm25=12)
+Compress : 210ms  (18 → 7 sentences, 61% removed)
+Agent    : 1430ms  (eval_score=0.82, fallback=False)
+
+--- Answer ---
+
+DataPacket is a Pydantic model that flows through every phase of the pipeline...
+```
 
 ## Embedding models for code
 
@@ -65,3 +86,5 @@ Ranked by code retrieval quality:
 | `nomic-embed-text` | Ollama (local) | Good general-purpose, fine for mixed corpora |
 | `voyage-code-2` | Voyage AI (API) | Best overall, paid |
 | `text-embedding-3-small` | OpenAI (API) | Decent, cost-effective |
+
+To switch, edit `config.py`.

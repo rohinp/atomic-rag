@@ -66,7 +66,7 @@ DataPacket(query="...")
   -> [Phase 3] documents populated (retrieved + reranked, with scores)
   -> [Phase 4] context populated (compressed string for the LLM)
   -> [Phase 5] answer populated
-  -> [Eval]    eval_scores populated (faithfulness, context_precision)
+  -> [Eval]    eval_scores populated (faithfulness, answer_relevance, context_precision)
 ```
 
 Each phase also appends a `TraceEntry` to `packet.trace` for observability.
@@ -88,12 +88,12 @@ Phase 3 before Phase 2 is intentional — hybrid retrieval delivers the highest 
 
 | Layer | Library |
 |---|---|
-| Parsing | Microsoft MarkItDown |
-| Vector store | ChromaDB / Qdrant |
-| Reranking | BGE-Reranker / Mixedbread.ai |
-| Orchestration | DSPy / Agno |
-| Evaluation | Ragas |
-| Observability | Langfuse |
+| Parsing | Microsoft MarkItDown (swap: Docling) |
+| Vector store | ChromaDB (swap: Qdrant) |
+| Keyword search | rank-bm25 |
+| Reranking | sentence-transformers cross-encoders |
+| LLM / Embedder | Ollama (swap: OpenAI, or any ChatModelBase) |
+| Evaluation | Built-in scorers + optional Ragas integration |
 
 ---
 
@@ -120,4 +120,4 @@ Quick links:
 
 ## Examples
 
-- [`examples/code_qa/`](examples/code_qa/) — indexes a Python codebase and answers questions about it (grows as phases ship)
+- [`examples/code_qa/`](examples/code_qa/) — full pipeline demo: indexes a Python codebase and answers questions via retrieval + compression + C-RAG
