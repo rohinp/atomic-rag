@@ -1,5 +1,7 @@
 # atomic-rag
 
+> Note: WIP I'm still reviewing the generated code, though the exmaples work :-) .
+
 A modular Python library of research-backed RAG building blocks. Each component solves one specific failure mode of retrieval-augmented generation and can be used independently or composed into a full pipeline.
 
 The design goal is the opposite of LangChain: no magic, no hidden abstractions. Every module has a clear input/output contract (`DataPacket`), is independently testable, and can be swapped without touching anything else.
