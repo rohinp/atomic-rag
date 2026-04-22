@@ -6,10 +6,29 @@ build-backend = "setuptools.build_meta"
 name = "atomic-rag"
 version = "0.1.0"
 description = "A modular, research-backed RAG building block library"
+readme = "README.md"
+license = { file = "LICENSE" }
 requires-python = ">=3.11"
+authors = [
+    { name = "Rohin Patel", email = "rohin.patel@outlook.com" },
+]
+keywords = ["rag", "retrieval-augmented-generation", "llm", "nlp", "vector-search", "bm25"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
 dependencies = [
     "pydantic>=2.0",
 ]
+
+[project.urls]
+"Source Code" = "https://github.com/rohinp/atomic-rag"
 
 [project.optional-dependencies]
 ollama = ["ollama>=0.4.0"]
