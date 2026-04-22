@@ -10,36 +10,38 @@ The design goal is the opposite of LangChain: no magic, no hidden abstractions. 
 
 ## Install
 
-**Quickstart — full local stack with Ollama:**
+**Full local stack with Ollama:**
 
 ```bash
-pip install -e ".[all,dev]"
+pip install "atomic-rag-lib[all]"
 ```
 
-This installs every dependency needed to run the pipeline end-to-end (Ollama, ChromaDB, BM25, sentence-transformers, MarkItDown) plus the test suite. Then pull the required models:
+Then pull the required Ollama models:
 
 ```bash
 ollama pull nomic-embed-text   # embeddings
 ollama pull llama3.2:3b        # chat / reasoning
 ```
 
-**Alternative — requirements.txt:**
-
-```bash
-pip install -r requirements.txt
-pip install -e .
-```
-
 **Pick only what you need:**
 
 ```bash
-pip install -e ".[dev]"          # tests only — no runtime deps
-pip install -e ".[retrieval]"    # ChromaDB + BM25
-pip install -e ".[reranker]"     # cross-encoder reranking (optional)
-pip install -e ".[ollama]"       # local models via Ollama
-pip install -e ".[openai]"       # OpenAI API models
-pip install -e ".[markitdown]"   # PDF/PPTX/XLSX ingestion
-pip install -e ".[ragas]"        # Ragas evaluation metrics
+pip install atomic-rag-lib                     # core only (DataPacket + schema)
+pip install "atomic-rag-lib[ollama]"           # local models via Ollama
+pip install "atomic-rag-lib[openai]"           # OpenAI API models
+pip install "atomic-rag-lib[retrieval]"        # ChromaDB + BM25
+pip install "atomic-rag-lib[markitdown]"       # PDF/PPTX/XLSX ingestion
+pip install "atomic-rag-lib[reranker]"         # cross-encoder reranking
+pip install "atomic-rag-lib[ragas]"            # Ragas evaluation metrics
+pip install "atomic-rag-lib[all]"              # everything above
+```
+
+**For development (clone the repo first):**
+
+```bash
+git clone https://github.com/rohinp/atomic-rag
+cd atomic-rag
+pip install -e ".[all,dev]"
 ```
 
 ## Quick Start
@@ -123,25 +125,27 @@ Phase 3 before Phase 2 is intentional — hybrid retrieval delivers the highest 
 
 ## Docs
 
-Start at [`docs/index.md`](docs/index.md) — it has a guided reading order, a full table of contents, and a pipeline diagram.
+Start at [`docs/index.md`](https://github.com/rohinp/atomic-rag/blob/main/docs/index.md) — it has a guided reading order, a full table of contents, and a pipeline diagram.
 
 Quick links:
-- [DataPacket contract](docs/concepts/data-packet.md)
-- [Ingestion module](docs/modules/ingestion.md)
-- [Retrieval module](docs/modules/retrieval.md)
-- [Hybrid search technique](docs/techniques/hybrid-search.md)
-- [Cross-encoder reranking](docs/techniques/cross-encoder-reranking.md)
-- [Markdown-native parsing](docs/techniques/markdown-native-parsing.md)
-- [Context module](docs/modules/context.md)
-- [Context compression technique](docs/techniques/context-compression.md)
-- [Query module](docs/modules/query.md)
-- [HyDE technique](docs/techniques/hyde.md)
-- [Multi-query expansion technique](docs/techniques/multi-query-expansion.md)
-- [Agent module](docs/modules/agent.md)
-- [Corrective RAG technique](docs/techniques/corrective-rag.md)
-- [Evaluation module](docs/modules/evaluation.md)
-- [Swapping backends guide](docs/guides/swapping-backends.md)
+- [DataPacket contract](https://github.com/rohinp/atomic-rag/blob/main/docs/concepts/data-packet.md)
+- [Ingestion module](https://github.com/rohinp/atomic-rag/blob/main/docs/modules/ingestion.md)
+- [Retrieval module](https://github.com/rohinp/atomic-rag/blob/main/docs/modules/retrieval.md)
+- [Hybrid search technique](https://github.com/rohinp/atomic-rag/blob/main/docs/techniques/hybrid-search.md)
+- [Cross-encoder reranking](https://github.com/rohinp/atomic-rag/blob/main/docs/techniques/cross-encoder-reranking.md)
+- [Markdown-native parsing](https://github.com/rohinp/atomic-rag/blob/main/docs/techniques/markdown-native-parsing.md)
+- [Context module](https://github.com/rohinp/atomic-rag/blob/main/docs/modules/context.md)
+- [Context compression technique](https://github.com/rohinp/atomic-rag/blob/main/docs/techniques/context-compression.md)
+- [Query module](https://github.com/rohinp/atomic-rag/blob/main/docs/modules/query.md)
+- [HyDE technique](https://github.com/rohinp/atomic-rag/blob/main/docs/techniques/hyde.md)
+- [Multi-query expansion technique](https://github.com/rohinp/atomic-rag/blob/main/docs/techniques/multi-query-expansion.md)
+- [Agent module](https://github.com/rohinp/atomic-rag/blob/main/docs/modules/agent.md)
+- [Corrective RAG technique](https://github.com/rohinp/atomic-rag/blob/main/docs/techniques/corrective-rag.md)
+- [Evaluation module](https://github.com/rohinp/atomic-rag/blob/main/docs/modules/evaluation.md)
+- [Swapping backends guide](https://github.com/rohinp/atomic-rag/blob/main/docs/guides/swapping-backends.md)
 
 ## Examples
 
-- [`examples/code_qa/`](examples/code_qa/) — full pipeline demo: indexes a Python codebase and answers questions via retrieval + compression + C-RAG
+- [`examples/code_qa/`](https://github.com/rohinp/atomic-rag/tree/main/examples/code_qa) — Q&A over a Python codebase using the full pipeline
+- [`examples/novel_qa/`](https://github.com/rohinp/atomic-rag/tree/main/examples/novel_qa) — Q&A over *The War of the Worlds* (plain text, auto-downloaded)
+- [`examples/book_qa/`](https://github.com/rohinp/atomic-rag/tree/main/examples/book_qa) — Q&A over *Dive into Deep Learning* PDF (auto-downloaded)
