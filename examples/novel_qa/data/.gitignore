@@ -1,0 +1,3 @@
+# Downloaded novel text — excluded from version control.
+# Running ingest.py or query.py will recreate this automatically.
+*.txt
