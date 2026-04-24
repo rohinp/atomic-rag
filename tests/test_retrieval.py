@@ -523,3 +523,29 @@ class TestHybridRetriever:
         r.add_documents([])
         r.embedder.embed_batch.assert_not_called()
         r.vector_store.add.assert_not_called()
+
+    def test_bm25_only_and_vector_only_docs_both_surface_in_hybrid_results(self):
+        """Demonstrates the complementarity of hybrid search (Cormack et al., 2009).
+
+        A document found exclusively by BM25 (exact keyword match, not in vector
+        results) and a document found exclusively by vector search (semantic match,
+        not in BM25 results) both appear in the final fused ranking. Neither
+        retrieval modality alone would surface both documents — only hybrid
+        fusion via RRF guarantees coverage across both signals.
+
+        This addresses Failure Point 4 from Barnett et al. (2024):
+        "The correct documents are not retrieved."
+
+        References:
+          Cormack et al., "Reciprocal Rank Fusion" (2009) — https://dl.acm.org/doi/10.1145/1571941.1572114
+          Barnett et al., "Seven Failure Points" (2024) — https://arxiv.org/abs/2401.05856
+        """
+        bm25_only = make_doc("bm25_exclusive_result")
+        vector_only = make_doc("vector_exclusive_result")
+
+        r = self._make_retriever(vector_docs=[vector_only], bm25_docs=[bm25_only])
+        result = r.retrieve(make_packet("query"), top_k=10)
+
+        content_set = {d.content for d in result.documents}
+        assert "vector_exclusive_result" in content_set, "Vector-only doc missing from hybrid results"
+        assert "bm25_exclusive_result" in content_set, "BM25-only doc missing from hybrid results"

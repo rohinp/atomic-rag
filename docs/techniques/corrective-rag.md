@@ -135,3 +135,27 @@ runner = AgentRunner(
     generator=LLMGenerator(chat_model=OpenAIChat(model="gpt-4o-mini")),
 )
 ```
+
+---
+
+## Research
+
+**Yan et al. (2024). "Corrective Retrieval Augmented Generation."**
+[arXiv:2401.15884](https://arxiv.org/abs/2401.15884)
+
+The paper that introduced C-RAG. Key findings: adding an evaluator-gated generation step outperforms standard RAG on PopQA (+5.7 EM), Arc-Challenge, PubHealth, and Biography benchmarks. The largest gains occur on out-of-distribution queries where the retriever frequently returns low-relevance documents — exactly the scenario where the fallback mechanism has the most impact.
+
+**Barnett et al. (2024). "Seven Failure Points When Engineering a Retrieval Augmented Generation System."**
+[arXiv:2401.05856](https://arxiv.org/abs/2401.05856)
+
+Identifies hallucination from insufficient context (FP6/FP7) as two of the seven most common RAG failures. C-RAG directly addresses both by refusing to generate when the evaluator scores the context below threshold.
+
+| Claim verified by test | Test |
+|---|---|
+| High eval score triggers generation | [`test_agent.py → TestAgentRunner::test_populates_answer_on_high_score`](https://github.com/rohinp/atomic-rag/blob/main/tests/test_agent.py) |
+| Low eval score triggers fallback (no hallucination) | [`test_agent.py → TestAgentRunner::test_uses_fallback_on_low_score`](https://github.com/rohinp/atomic-rag/blob/main/tests/test_agent.py) |
+| Generator not called on fallback (no LLM cost) | [`test_agent.py → TestAgentRunner::test_generator_not_called_on_fallback`](https://github.com/rohinp/atomic-rag/blob/main/tests/test_agent.py) |
+| Exact threshold boundary generates | [`test_agent.py → TestAgentRunner::test_threshold_boundary_exact_match_generates`](https://github.com/rohinp/atomic-rag/blob/main/tests/test_agent.py) |
+| Empty context scores 0.0 without LLM call | [`test_agent.py → TestLLMEvaluator::test_empty_context_returns_zero_without_llm`](https://github.com/rohinp/atomic-rag/blob/main/tests/test_agent.py) |
+
+→ [Full reference list](../references.md)

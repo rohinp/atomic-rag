@@ -111,3 +111,21 @@ reranker = CrossEncoderReranker(model="cross-encoder/ms-marco-electra-base")
 # Multilingual + code
 reranker = CrossEncoderReranker(model="BAAI/bge-reranker-v2-m3")
 ```
+
+---
+
+## Research
+
+**Reimers & Gurevych (2019). "Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks."**
+*EMNLP 2019.* [arXiv:1908.10084](https://arxiv.org/abs/1908.10084)
+
+Introduced the bi-encoder / cross-encoder distinction. Bi-encoders (used in Phase 3 vector search) encode query and document independently — fast at search time. Cross-encoders encode both together, allowing full attention across the pair — slower but significantly more accurate for reranking a small candidate set.
+
+| Claim verified by test | Test |
+|---|---|
+| Scores sorted descending after reranking | [`test_retrieval.py → TestCrossEncoderReranker::test_rerank_sorts_descending`](https://github.com/rohinp/atomic-rag/blob/main/tests/test_retrieval.py) |
+| Reranker called with (query, doc) pairs | [`test_retrieval.py → TestCrossEncoderReranker::test_predict_called_with_query_doc_pairs`](https://github.com/rohinp/atomic-rag/blob/main/tests/test_retrieval.py) |
+| Reranker result reflected in trace | [`test_retrieval.py → TestHybridRetriever::test_trace_records_reranked_true`](https://github.com/rohinp/atomic-rag/blob/main/tests/test_retrieval.py) |
+| No reranker call when reranker absent | [`test_retrieval.py → TestHybridRetriever::test_reranker_not_called_when_absent`](https://github.com/rohinp/atomic-rag/blob/main/tests/test_retrieval.py) |
+
+→ [Full reference list](../references.md)

@@ -118,3 +118,21 @@ packet = multi.expand(packet)
 ```
 
 > Tip: for most use cases, pick one strategy. HyDE for short/vague queries; MultiQuery for queries where vocabulary variance is the main problem.
+
+---
+
+## Research
+
+**Jagerman et al. (2023). "Query Expansion by Prompting Large Language Models."**
+[arXiv:2305.03653](https://arxiv.org/abs/2305.03653)
+
+Shows that LLM-generated query expansions outperform classical pseudo-relevance feedback on several BEIR benchmarks, with the largest gains on queries where vocabulary mismatch between the question and the relevant documents is highest.
+
+| Claim verified by test | Test |
+|---|---|
+| N alternative phrasings generated | [`test_query.py → TestMultiQueryExpander::test_n_queries_limits_alternatives`](https://github.com/rohinp/atomic-rag/blob/main/tests/test_query.py) |
+| Original query included by default | [`test_query.py → TestMultiQueryExpander::test_original_included_by_default`](https://github.com/rohinp/atomic-rag/blob/main/tests/test_query.py) |
+| Multiple embed calls issued — one per query | [`test_query.py → TestHybridRetrieverQueryIntegration::test_multiple_embed_calls_with_expanded_queries`](https://github.com/rohinp/atomic-rag/blob/main/tests/test_query.py) |
+| Trace records requested vs generated count | [`test_query.py → TestMultiQueryExpander::test_trace_records_requested_and_generated`](https://github.com/rohinp/atomic-rag/blob/main/tests/test_query.py) |
+
+→ [Full reference list](../references.md)

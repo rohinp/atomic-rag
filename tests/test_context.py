@@ -389,6 +389,33 @@ class TestSentenceCompressor:
         assert details["sentences_after"] == 1
         assert details["reduction_pct"] == pytest.approx(66.7, abs=0.2)
 
+    def test_relevant_sentence_buried_in_middle_is_retained(self):
+        """Directly demonstrates the 'Lost in the Middle' problem (Liu et al., 2023).
+
+        LLMs perform worse when the relevant sentence is surrounded by irrelevant
+        text in a long context window. SentenceCompressor mitigates this by
+        scoring each sentence individually and dropping low-similarity ones,
+        regardless of their position. The relevant sentence in the middle is
+        retained while the flanking noise is dropped.
+
+        Reference: Liu et al., "Lost in the Middle: How Language Models Use Long
+        Contexts" (2023) — https://arxiv.org/abs/2307.03172
+        """
+        doc = make_doc(
+            "Unrelated opening sentence. The answer is forty-two. Unrelated closing sentence."
+        )
+        packet = make_packet(docs=[doc])
+        # query vector: [1, 0]. Middle sentence similarity = 1.0 (relevant).
+        # Flanking sentences similarity = 0.0 (orthogonal, irrelevant).
+        embedder = stub_embedder(
+            [1.0, 0.0],
+            [[0.0, 1.0], [1.0, 0.0], [0.0, 1.0]],
+        )
+        result = SentenceCompressor(embedder, threshold=0.5).compress(packet)
+        assert "forty-two" in result.context
+        assert "Unrelated opening" not in result.context
+        assert "Unrelated closing" not in result.context
+
     def test_no_reduction_when_all_kept(self):
         doc = make_doc("One. Two.")
         packet = make_packet(docs=[doc])

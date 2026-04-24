@@ -112,3 +112,21 @@ compressor = SentenceCompressor(embedder=OllamaEmbedder(), threshold=0.35)
 # Always keep at least 2 sentences per document
 compressor = SentenceCompressor(embedder=OllamaEmbedder(), threshold=0.6, min_sentences=2)
 ```
+
+---
+
+## Research
+
+**Liu et al. (2023). "Lost in the Middle: How Language Models Use Long Contexts."**
+[arXiv:2307.03172](https://arxiv.org/abs/2307.03172)
+
+The foundational study motivating context compression. Key finding: LLM performance on multi-document QA drops from ~75% to ~45% accuracy as the relevant document moves from position 1 to position 10 in a 20-document context. Models attend strongly to the beginning and end of the context but miss content in the middle. `SentenceCompressor` addresses this by filtering to primarily relevant sentences before the LLM ever sees the context.
+
+| Claim verified by test | Test |
+|---|---|
+| Relevant sentence buried in middle is retained | [`test_context.py → TestSentenceCompressor::test_relevant_sentence_buried_in_middle_is_retained`](https://github.com/rohinp/atomic-rag/blob/main/tests/test_context.py) |
+| Low-similarity flanking sentences dropped | [`test_context.py → TestSentenceCompressor::test_low_similarity_sentence_dropped`](https://github.com/rohinp/atomic-rag/blob/main/tests/test_context.py) |
+| Minimum sentences always retained per doc | [`test_context.py → TestSentenceCompressor::test_all_low_similarity_still_keeps_min_sentences`](https://github.com/rohinp/atomic-rag/blob/main/tests/test_context.py) |
+| Reduction percentage recorded in trace | [`test_context.py → TestSentenceCompressor::test_reduction_pct_reflects_dropped_sentences`](https://github.com/rohinp/atomic-rag/blob/main/tests/test_context.py) |
+
+→ [Full reference list](../references.md)

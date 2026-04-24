@@ -123,11 +123,27 @@ Phase 3 before Phase 2 is intentional — hybrid retrieval delivers the highest 
 
 ---
 
+## Research Foundations
+
+Every technique is grounded in a published paper. The table below maps each failure mode to the paper that identified it and the test case that verifies the fix. → [Full reference list with citations and test links](https://github.com/rohinp/atomic-rag/blob/main/docs/references.md)
+
+| Failure mode | Paper | Key test |
+|---|---|---|
+| Messy source docs / bad chunking | [Barnett et al., 2024 — Seven Failure Points](https://arxiv.org/abs/2401.05856) | [`test_ingestion.py → test_header_is_kept_with_its_content`](https://github.com/rohinp/atomic-rag/blob/main/tests/test_ingestion.py) |
+| Vague queries miss relevant docs | [Gao et al., 2022 — HyDE](https://arxiv.org/abs/2212.10496) · [Jagerman et al., 2023 — Multi-Query](https://arxiv.org/abs/2305.03653) | [`test_query.py → test_populates_expanded_queries`](https://github.com/rohinp/atomic-rag/blob/main/tests/test_query.py) |
+| Keywords / acronyms missed by vector search | [Robertson & Zaragoza, 2009 — BM25](https://www.nowpublishers.com/article/Details/INR-019) · [Cormack et al., 2009 — RRF](https://dl.acm.org/doi/10.1145/1571941.1572114) | [`test_retrieval.py → test_bm25_only_and_vector_only_docs_both_surface_in_hybrid_results`](https://github.com/rohinp/atomic-rag/blob/main/tests/test_retrieval.py) |
+| Relevant sentence buried mid-context | [Liu et al., 2023 — Lost in the Middle](https://arxiv.org/abs/2307.03172) | [`test_context.py → test_relevant_sentence_buried_in_middle_is_retained`](https://github.com/rohinp/atomic-rag/blob/main/tests/test_context.py) |
+| Hallucination when retrieval fails | [Yan et al., 2024 — C-RAG](https://arxiv.org/abs/2401.15884) | [`test_agent.py → test_uses_fallback_on_low_score`](https://github.com/rohinp/atomic-rag/blob/main/tests/test_agent.py) |
+| No visibility into where pipeline fails | [Es et al., 2023 — RAGAS](https://arxiv.org/abs/2309.15217) | [`test_evaluation.py → test_partial_support_gives_fractional_score`](https://github.com/rohinp/atomic-rag/blob/main/tests/test_evaluation.py) |
+
+---
+
 ## Docs
 
 Start at [`docs/index.md`](https://github.com/rohinp/atomic-rag/blob/main/docs/index.md) — it has a guided reading order, a full table of contents, and a pipeline diagram.
 
 Quick links:
+- [Research references & test mappings](https://github.com/rohinp/atomic-rag/blob/main/docs/references.md)
 - [DataPacket contract](https://github.com/rohinp/atomic-rag/blob/main/docs/concepts/data-packet.md)
 - [Ingestion module](https://github.com/rohinp/atomic-rag/blob/main/docs/modules/ingestion.md)
 - [Retrieval module](https://github.com/rohinp/atomic-rag/blob/main/docs/modules/retrieval.md)

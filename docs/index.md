@@ -73,6 +73,17 @@ Task-oriented walkthroughs.
 
 ---
 
+## Research References
+
+Every technique is grounded in a published paper. [`docs/references.md`](references.md) maps each failure mode to:
+- the paper that identified and quantified it
+- the atomic-rag component that addresses it
+- the specific test case that verifies the fix
+
+Start there if you want to understand *why* each design decision was made.
+
+---
+
 ## Pipeline at a glance
 
 ```

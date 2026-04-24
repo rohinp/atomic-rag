@@ -124,3 +124,31 @@ retriever = HybridRetriever(
     vector_store=ChromaVectorStore(persist_path="./chroma_db"),
 )
 ```
+
+---
+
+## Research
+
+**Cormack, Clarke & Buettcher (2009). "Reciprocal Rank Fusion Outperforms Condorcet and Individual Rank Learning Methods."**
+*SIGIR 2009.* [ACM DL](https://dl.acm.org/doi/10.1145/1571941.1572114)
+
+The paper that introduced RRF as the fusion method for combining ranked lists. Key finding: RRF outperforms linear score combination and learning-to-rank methods on TREC fusion tasks, while requiring no training and no score normalisation. The `k=60` constant is the paper's empirically validated default.
+
+**Robertson & Zaragoza (2009). "The Probabilistic Relevance Framework: BM25 and Beyond."**
+*Foundations and Trends in Information Retrieval.* [Publisher link](https://www.nowpublishers.com/article/Details/INR-019)
+
+Defines the BM25 family of retrieval functions still used as the keyword-search baseline in virtually every IR system. atomic-rag uses BM25Okapi from the `rank-bm25` library.
+
+**Barnett et al. (2024). "Seven Failure Points When Engineering a Retrieval Augmented Generation System."**
+[arXiv:2401.05856](https://arxiv.org/abs/2401.05856)
+
+Identifies *"correct documents are not retrieved"* (FP4) as one of the most common production failures. Hybrid search directly addresses this by combining semantic recall (vector) with exact-term precision (BM25).
+
+| Claim verified by test | Test |
+|---|---|
+| BM25-only and vector-only docs both surface in hybrid results | [`test_retrieval.py → TestHybridRetriever::test_bm25_only_and_vector_only_docs_both_surface_in_hybrid_results`](https://github.com/rohinp/atomic-rag/blob/main/tests/test_retrieval.py) |
+| Doc in both lists outscores doc in one list (RRF) | [`test_retrieval.py → TestRRF::test_doc_in_two_lists_outscores_doc_in_one`](https://github.com/rohinp/atomic-rag/blob/main/tests/test_retrieval.py) |
+| CamelCase identifiers tokenised and matched by BM25 | [`test_retrieval.py → TestBM25Retriever::test_camelcase_identifier_matches_query`](https://github.com/rohinp/atomic-rag/blob/main/tests/test_retrieval.py) |
+| Deduplication: same doc from both sources counted once | [`test_retrieval.py → TestRRF::test_deduplication_across_lists`](https://github.com/rohinp/atomic-rag/blob/main/tests/test_retrieval.py) |
+
+→ [Full reference list](../references.md)
